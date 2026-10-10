@@ -17,6 +17,20 @@ It has three goals, in this order of priority:
 3. **Portfolio + research output** for an AI Engineer career and an MSc AI application (University of Edinburgh).
    The project doubles as a research experiment on citation faithfulness (see `PLAN.md` → Research track).
 
+## Project docs (read before designing anything)
+
+| File | Answers | Notes |
+|---|---|---|
+| `VALUES.md` | *Why*: user, jobs-to-be-done, value, principles | Product source of truth |
+| `SYSTEM.md` | *What*: 8-stage pipeline, use cases `UC-xx`, requirements `FR-x.y` / `NFR-x`, open decisions `D1–D5` | Reference IDs in commits and `PLAN.md` |
+| `DESIGN.md` | *How*: ERD, use case diagram, design decisions | Update when the schema changes |
+| `PLAN.md` | *When*: roadmap, checkboxes | MVP = stages S1–S4 |
+
+- These docs are edited in **Obsidian**: keep YAML frontmatter, `[[wikilinks]]`, `> [!callout]` blocks, and
+  Mermaid diagrams in `VALUES.md`, `SYSTEM.md`, `DESIGN.md`. `PLAN.md`, `README.md`, and `CLAUDE.md` use plain
+  Markdown links (they must render on GitHub).
+- `VALUES.md`, `SYSTEM.md`, `DESIGN.md` are currently gitignored (private drafts); `.obsidian/` is gitignored.
+
 ## How to work with me (learning mode — important)
 
 - **Explain before you build.** For any core concept (LLM call, chunking, embeddings, similarity metric,
@@ -42,10 +56,18 @@ critique my synthesis. It should not: write my thesis chapters or invent argumen
 **Every factual claim it outputs must link to a real source passage** (paper + page/section + quote).
 Never fabricate a citation; if nothing supports a claim, say so.
 
+- Every pipeline stage ends in a **human approval gate**; never auto-advance a project to the next stage.
+- Proposal and chapter support (stages S5, S8) produce **skeletons + critique**, not prose, until decision
+  D1 in `SYSTEM.md` is made and recorded in `docs/decisions.md`.
+- Data collection must respect ToS / robots.txt / rate limits and UU PDP (personal data needs a consent note).
+
 ## Tech stack (initial — may change, record changes in docs/decisions.md)
 
 - Python 3.11+, managed with `uv`
-- LLM: Use a free open model AI (only used by the dev)
+- LLM: behind one provider interface (`llm/`). Dev default: a free open model run locally. Optional adapters:
+  Claude Code CLI (`claude -p`) and Codex CLI (`codex exec`) via the user's subscriptions, and HTTP APIs.
+  Use official CLIs only; never extract session tokens. Final default = decision D2.
+- Storage: SQLite single file `data/copilot.db` (schema in `DESIGN.md`); raw collected data as immutable files
 - Embeddings: local multilingual model via `sentence-transformers` (e.g. `intfloat/multilingual-e5-small`) — supports Indonesian
 - Vector store: NumPy (from scratch) first, then ChromaDB or sqlite-vec
 - PDF parsing: `pymupdf`
@@ -57,10 +79,12 @@ Never fabricate a citation; if nothing supports a claim, say so.
 
 ```
 src/research_copilot/
-  llm/          # thin client around the Anthropic API, token/cost logging
-  chat/         # Level 1: chatbot, conversation memory, prompts
-  rag/          # Level 2: ingest, chunking, embeddings, vector store, retrieval
+  llm/          # provider interface + adapters (local, Claude Code CLI, Codex CLI, API), call logging
+  store/        # SQLite schema + data access (projects, artifacts, papers, ...)
+  chat/         # Level 1: chatbot, conversation memory, prompts, topic + RQ coach
+  rag/          # Level 2: ingest, chunking, embeddings, vector store, retrieval, concept matrix
   agents/       # Level 3: tool-use loop, tools/, search + checker agents
+  connectors/   # v2: data collection connectors (Apify, open-data APIs, scrapers)
   cli.py
 evals/          # eval cases, question sets, scripts, results
 data/           # PDFs, indexes, caches (gitignored)
@@ -88,3 +112,4 @@ uv run python evals/run_eval.py
 - Keep prompts in versioned files or constants, not scattered inline strings.
 - No `Co-Authored-By: Claude` (or any AI attribution) lines in commit messages or PR descriptions.
 - Respect API rate limits and terms of OpenAlex / Semantic Scholar / arXiv; cache responses in `data/cache/`.
+- Stay inside the MVP (stages S1–S4) unless I explicitly start v2 work.

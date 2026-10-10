@@ -2,6 +2,9 @@
 
 Last updated: 2026-10-10 · Owner: Sayyid
 
+Related docs: [VALUES.md](VALUES.md) (why) · [SYSTEM.md](SYSTEM.md) (FR / NFR / use cases) ·
+[DESIGN.md](DESIGN.md) (ERD, use case diagram). Requirement IDs (`UC-xx`, `FR-x.y`) below refer to SYSTEM.md.
+
 ## 1. Problem & value
 
 **Problem.** Doing real research (finding papers, reading, extracting evidence, synthesising) is slow and
@@ -29,10 +32,20 @@ Indonesian writer) are less likely to catch it.
 
 ## 3. Scope
 
-**In:** chat with a research-coach persona; ingest PDFs; retrieval with citations; paper search via
-OpenAlex / Semantic Scholar / arXiv; claim verification; EN + ID queries; CLI, then simple UI.
+The product is an 8-stage research pipeline (see SYSTEM.md §2), each stage ending in a human approval gate:
 
-**Out (for now):** writing thesis chapters, multi-user/auth, deployment at scale, fine-tuning, paywalled sources.
+| Stage | | Release |
+|---|---|---|
+| S1 Explore topic · S2 Literature · S3 Gap analysis · S4 RQ + method | curiosity → verified gaps → RQ | **MVP** (Levels 1–3, by 31 Jan 2027) |
+| S5 Proposal skeleton · S6 Data collection | proposal → dataset | **v2** (thesis period, Feb 2027+) |
+| S7 Analysis · S8 Writing support | results → chapter outlines + critique | **v3** (later) |
+
+**In (MVP):** project workspace; research-coach chat; topic candidates; paper search via
+OpenAlex / Semantic Scholar / arXiv with explainable ranking; PDF ingest + cited Q&A; concept matrix + gap
+analysis; RQ + method suggestions; claim verification; EN + ID; CLI, then simple UI.
+
+**Out (for now):** writing submittable thesis chapters, multi-user/auth, deployment at scale, fine-tuning,
+paywalled sources. S5–S8 wait until after the MVP.
 
 ## 4. Roadmap
 
@@ -42,6 +55,12 @@ Build incrementally. Each level must be *working and used by me* before starting
 
 - [ ] Init repo: `uv init`, `ruff`, `pytest`, `.env.example`, `.gitignore`, push to GitHub (scaffold done; push pending)
 - [x] Create `docs/learning-log.md` and `docs/decisions.md`
+- [x] Draft product docs: `VALUES.md`, `SYSTEM.md` (FR / NFR / use cases)
+- [x] Draft `DESIGN.md`: ERD + use case diagram
+- [ ] Decide open decisions D1–D5 (SYSTEM.md §8) → `docs/decisions.md`
+  - [ ] D1 prose drafting policy (check FASILKOM AI-use policy first)
+  - [ ] D2 default LLM (local open model vs API vs Claude Code / Codex CLI)
+  - [ ] D3 local DB (SQLite + sqlite-vec vs DuckDB)
 - [ ] Pick 3 eval cases (one per research type):
   - [ ] Academic: AI in supply chain management / knowledge management automation
   - [ ] Company case: how Shopee (Sea Ltd) uses AI end-to-end
@@ -53,10 +72,13 @@ Build incrementally. Each level must be *working and used by me* before starting
 
 Concepts: Messages API, system prompts, roles, context window, temperature, streaming, tokens & cost.
 
-- [ ] `llm/client.py`: raw Anthropic API call, retries, token + cost + latency logging
+- [ ] `llm/`: provider interface + first adapter (per D2), retries, token + cost + latency logging (FR-9.3, FR-9.4)
+- [ ] Prompts as versioned files; prompt version stored with outputs (FR-9.5)
+- [ ] Project workspace: SQLite `project`, `artifact`, `llm_call` tables (FR-0.1, FR-0.2; DESIGN.md §1.3)
 - [ ] CLI chat loop with conversation memory (and truncation when context grows)
-- [ ] Research-coach system prompt: sharpens a vague topic into SMART research questions, asks follow-ups
-- [ ] Structured output: research question → JSON (RQ, scope, keywords EN/ID, candidate methods)
+- [ ] Topic candidates from keywords, with pros/cons + feasibility, save shortlist (UC-02, UC-03; LLM-only for now)
+- [ ] Research-coach system prompt: sharpens a topic into SMART research questions, critiques them (UC-07)
+- [ ] Structured output: RQ → JSON (RQ, scope, keywords EN/ID, 2–3 method options with rationale) (UC-08)
 - [ ] **Baseline experiment:** ask plain LLM for 20 references on each eval case, check how many are real → first data point for the research track
 - **Done when:** I use it to sharpen the RQs of all 3 eval cases, and the baseline fabrication rate is recorded.
 
@@ -70,6 +92,8 @@ Concepts: document parsing, chunking strategies, embeddings, similarity metrics 
 - [ ] Vector store **from scratch** in NumPy; implement cosine, dot, L2 and compare
 - [ ] Swap to ChromaDB or sqlite-vec once the from-scratch version is understood
 - [ ] `ask` command: retrieve → answer with inline citations `[paper, p.X]` + quoted passage
+- [ ] Concept matrix: dimensions → per-paper cells with quote + page → gaps by type (UC-06, FR-3.x)
+- [ ] Knowledge base: ingest UI methodology course material as a separate collection (UC-15, should-have)
 - [ ] Retrieval eval: hit@k / MRR on eval questions; pick chunking + metric based on numbers, record in `decisions.md`
 - [ ] Test cross-lingual: Indonesian question → English papers
 - **Done when:** I can drop 20+ PDFs on a topic and get cited answers I trust, with retrieval metrics logged.
@@ -81,7 +105,9 @@ multi-agent orchestration, tracing, guardrails.
 
 - [ ] **Hand-written tool-use loop** on the raw API (no framework), with max-steps + tracing to `data/traces/`
 - [ ] Tools: `search_papers` (OpenAlex / Semantic Scholar / arXiv), `fetch_pdf`, `ingest`, `retrieve`, `save_note`
-- [ ] **Search agent:** topic → query plan (EN + ID keywords) → search → dedupe → rank → ingest top-N
+- [ ] **Search agent:** topic → query plan (EN + ID keywords) → search → dedupe → rank → ingest top-N (UC-04)
+- [ ] Explainable hybrid ranking (similarity + recency + citations) with score breakdown + "seminal" bucket (FR-2.3, FR-2.4)
+- [ ] Ground topic candidates with a quick literature scan: paper count, year trend, seed papers (FR-1.3)
 - [ ] **Checker agent:** for each claim + citation: does the source exist? does the passage support it? → supported / partial / unsupported
 - [ ] **Orchestrator:** RQ → search agent → retrieve → draft evidence table → checker → report
 - [ ] Output: evidence matrix (claim | source | quote | verdict) as Markdown/CSV
@@ -95,6 +121,19 @@ multi-agent orchestration, tracing, guardrails.
 - [ ] Technical write-up (blog / README section): architecture, results, lessons
 - [ ] Short demo video / GIF
 - [ ] Decide: extend into undergraduate thesis? (see Research track)
+
+### v2 — Proposal & data (Feb 2027+, not scheduled yet)
+
+- [ ] Proposal skeleton following the UI course template, with evidence slots (UC-09, FR-5.1)
+- [ ] Data plan from RQ + method, with ethics notes (FR-6.1)
+- [ ] Connector interface + first connector (per D4: Apify / Crawl4AI / open-data API) (UC-10)
+- [ ] Raw JSON + provenance → normalized tables → Excel/CSV export (UC-11)
+- [ ] BibTeX / RIS export (UC-17)
+
+### v3 — Analysis & writing support (later)
+
+- [ ] Analysis technique advice + local scripts (UC-12)
+- [ ] Chapter outline + critique of my own text (UC-13; scope depends on D1)
 
 ## 5. Research track (runs alongside the build)
 
@@ -116,6 +155,8 @@ optionally extend to a small user study for the thesis.
 | Letting AI write the code without understanding it | Learning mode in CLAUDE.md; learning log per milestone |
 | API cost | Log cost per call; use small models for dev; cache |
 | Paywalled PDFs | Use open-access (OpenAlex OA links, arXiv); manual upload otherwise |
+| Scope creep from S5–S8 vision | MVP is S1–S4 only; S5–S8 are v2/v3 |
+| Scraping breaks ToS / UU PDP | Prefer official APIs; ethics note + consent flag per data source |
 | Campus rules on AI use in thesis | Check faculty policy before using it for thesis work; tool is assistant, not author |
 
 ## 7. Progress log
@@ -124,3 +165,4 @@ optionally extend to a small user study for the thesis.
 |---|---|
 | 2026-10-10 | Project defined: problem, value, objectives, L1–L3 roadmap, research track. |
 | 2026-10-10 | Phase 0 scaffold: uv project, pytest, ruff, `.env.example`, docs. |
+| 2026-10-10 | Product defined end-to-end: VALUES.md, SYSTEM.md (8 stages, 17 use cases, FR/NFR), DESIGN.md (ERD, use case diagram). MVP = S1–S4. |

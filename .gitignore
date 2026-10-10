@@ -7,3 +7,7 @@ __pycache__/
 data/
 *.pdf
 .DS_Store
+VALUES.md
+SYSTEM.md
+.obsidian/
+DESIGN.md
