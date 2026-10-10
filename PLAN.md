@@ -40,8 +40,8 @@ Build incrementally. Each level must be *working and used by me* before starting
 
 ### Phase 0 — Setup & baseline (13–19 Oct 2026)
 
-- [ ] Init repo: `uv init`, `ruff`, `pytest`, `.env.example`, `.gitignore`, push to GitHub
-- [ ] Create `docs/learning-log.md` and `docs/decisions.md`
+- [ ] Init repo: `uv init`, `ruff`, `pytest`, `.env.example`, `.gitignore`, push to GitHub (scaffold done; push pending)
+- [x] Create `docs/learning-log.md` and `docs/decisions.md`
 - [ ] Pick 3 eval cases (one per research type):
   - [ ] Academic: AI in supply chain management / knowledge management automation
   - [ ] Company case: how Shopee (Sea Ltd) uses AI end-to-end
@@ -123,3 +123,4 @@ optionally extend to a small user study for the thesis.
 | Date | Update |
 |---|---|
 | 2026-10-10 | Project defined: problem, value, objectives, L1–L3 roadmap, research track. |
+| 2026-10-10 | Phase 0 scaffold: uv project, pytest, ruff, `.env.example`, docs. |
