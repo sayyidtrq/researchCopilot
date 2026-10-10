@@ -45,7 +45,7 @@ Never fabricate a citation; if nothing supports a claim, say so.
 ## Tech stack (initial — may change, record changes in docs/decisions.md)
 
 - Python 3.11+, managed with `uv`
-- LLM: Anthropic Claude API via the official `anthropic` SDK (direct API calls, no wrapper framework)
+- LLM: Use a free open model AI (only used by the dev)
 - Embeddings: local multilingual model via `sentence-transformers` (e.g. `intfloat/multilingual-e5-small`) — supports Indonesian
 - Vector store: NumPy (from scratch) first, then ChromaDB or sqlite-vec
 - PDF parsing: `pymupdf`
@@ -86,4 +86,5 @@ uv run python evals/run_eval.py
 - Secrets live in `.env` (see `.env.example`). Never commit keys, PDFs, or vector indexes.
 - Log every LLM call (model, tokens in/out, latency, cost estimate) — it's needed for evaluation.
 - Keep prompts in versioned files or constants, not scattered inline strings.
+- No `Co-Authored-By: Claude` (or any AI attribution) lines in commit messages or PR descriptions.
 - Respect API rate limits and terms of OpenAlex / Semantic Scholar / arXiv; cache responses in `data/cache/`.
